@@ -1,4 +1,4 @@
-from genie import drs
+from genie import drs, slp
 
 with open('graphics.drs', 'r') as f:
     for resource_type, resource_id, data in drs.get_all_files(f):
