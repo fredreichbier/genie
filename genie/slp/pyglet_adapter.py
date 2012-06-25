@@ -39,26 +39,51 @@ def load_animation(stream, slp_file, frame_ids, duration=0.1, mirrored=False):
         anim_frames.append(AnimationFrame(img, duration))
     return Animation(anim_frames)
 
-ANIMATION_MAP = {
-    2: (0, 9, False), # south: frames 0-9, not mirrored
-    1: (10, 19, False), # southwest: frames 10-19, not mirrored
-    4: (20, 29, False), # west: ...
-    7: (30, 39, False), # northwest
-    8: (40, 49, False), # north
-    9: (30, 39, True), # northeast is northwest, but mirrored
-    6: (20, 29, True), # east is west mirrored
-    3: (10, 19, True), # southeast is southwest mirrored
+ORIGINAL_ANIMATIONS = [
+    2, # south
+    1, # southwest
+    4, # ...
+    7,
+    8,
+]
+MIRRORED_ANIMATIONS = {
+    7: 9, # 9 (northeast) is 7 (northwest) mirrored
+    4: 6, # ...
+    1: 3,
 }
+DIRECTIONS_IN_SLP = 5
+
+class AnimationError(Exception):
+    pass
 
 def load_aoe_animations(stream, slp_file, duration=0.1):
     """
         Load AOE animations. Return a dictionary ``{ direction: Animation instance }``
         where *direction* is a number from 0-9. Look at your numpad.
+
+        The actual count of frames per direction varies, but there always are
+        5 directions stored in one SLP file, so we can calculate the frame count
+        per animation from that.
     """
     anims = {}
-    for direction, frame_ids in ANIMATION_MAP.iteritems():
+    if len(slp_file.frames) % DIRECTIONS_IN_SLP:
+        raise AnimationError('incompatible frame count: %d' % len(slp_file.frames))
+    frames_per_direction = len(slp_file.frames) // DIRECTIONS_IN_SLP
+    # load original (in-file) animations
+    for idx, direction in enumerate(ORIGINAL_ANIMATIONS):
         anims[direction] = load_animation(stream, slp_file,
-                                    (frame_ids[0], frame_ids[1]),
+                                    (
+                                        idx * frames_per_direction,
+                                        (idx + 1) * frames_per_direction - 1
+                                    ),
                                     duration,
-                                    frame_ids[2])
+                                    False)
+        if direction in MIRRORED_ANIMATIONS:
+            anims[MIRRORED_ANIMATIONS[direction]] = load_animation(stream, slp_file,
+                                        (
+                                            idx * frames_per_direction,
+                                            (idx + 1) * frames_per_direction - 1
+                                        ),
+                                        duration,
+                                        True)
     return anims

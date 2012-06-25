@@ -14,7 +14,7 @@ def get_pyglet_animation(num):
         slp_file = slp.SLPFile(PygletAdapter, slp_stream)
         return load_aoe_animations(slp_stream, slp_file)
 
-anims = get_pyglet_animation(663)
+anims = get_pyglet_animation(669)
 
 sprite = pyglet.sprite.Sprite(anims[8])
 sprite.set_position(300, 300)
