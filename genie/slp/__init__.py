@@ -61,12 +61,14 @@ class Frame(object):
         self.structure = structure
         self.slp_file = None # to be set later
 
-    def parse_stream(self, stream, player=1):
+    def parse_stream(self, stream, player=1, image_adapter_cls=None):
         """
             Use the image adapter class to create an image.
         """
         width, height = self.structure.width, self.structure.height
-        adapter = self.slp_file.image_adapter_cls(width, height)
+        if image_adapter_cls is None:
+            image_adapter_cls = self.slp_file.image_adapter_cls
+        adapter = image_adapter_cls(width, height)
 
         # First, the boundaries.
         stream.seek(self.structure.outline_table_offset)

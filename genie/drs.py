@@ -79,7 +79,7 @@ class Table(object):
 
     def get_data(self, resource_id):
         """ get the binary data of a specific file. """
-        return embedded_files[resource_id].data.value
+        return self.embedded_files[resource_id].data.value
 
     def read_all(self):
         """ read ALL THE THINGS """
@@ -106,6 +106,18 @@ class DRSFile(object):
     @property
     def tables(self):
         return self.header.tables
+
+    def get_data(self, resource_id):
+        """
+            get the binary data of a specific file. Raise KeyError
+            if it couldn't be found.
+        """
+        for table in self.tables:
+            try:
+                return table.get_data(resource_id)
+            except KeyError:
+                pass
+        raise KeyError(resource_id)
 
 def get_all_files(stream):
     """
