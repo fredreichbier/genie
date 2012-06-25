@@ -1,6 +1,7 @@
 from genie import drs
 
 with open('graphics.drs', 'r') as f:
-    fil = drs.DRSFile()
-    fil.parse_stream(f)
-    print fil.tables
+    for resource_type, resource_id, data in drs.get_all_files(f):
+        filename = '%d.%s' % (resource_id, drs.get_file_extension(resource_type))
+        with open(filename, 'w') as g:
+            g.write(data)

@@ -1,16 +1,42 @@
+# coding: utf-8
+"""
+    A parser for the genie (Age of Empires, ...) DRS container file format.
+
+    Based on the excellent documentation at http://artho.com/age/files/drs.html -
+    thank you!
+"""
+
+import struct
 
 import construct as cons
 
-class DRSTableAdapter(cons.Adapter):
+class TableAdapter(cons.Adapter):
     def _decode(self, obj, context):
-        return DRSTable(obj['resource_type'],
+        return Table(obj['resource_type'],
                         obj['offset'],
-                        obj['number_of_files'])
+                        obj['number_of_files'],
+                        dict((f.resource_id, f) for f in obj['embedded_files']))
+
+EMBEDDED_FILE = cons.Struct('embedded_files',
+    cons.ULInt32('resource_id'),
+    cons.ULInt32('offset'),
+    cons.ULInt32('size'),
+    cons.OnDemand(
+        cons.Pointer(lambda ctx: ctx['offset'],
+            cons.MetaField('data', lambda ctx: ctx['size'])
+        )
+    )
+)
 
 TABLE = cons.Struct('tables',
     cons.ULInt32('resource_type'),
     cons.ULInt32('offset'),
     cons.ULInt32('number_of_files'),
+    cons.Pointer(lambda ctx: ctx['offset'],
+        cons.MetaRepeater(lambda ctx: ctx['number_of_files'],
+            EMBEDDED_FILE
+        )
+    )
 )
 
 HEADER = cons.Struct('header',
@@ -19,13 +45,7 @@ HEADER = cons.Struct('header',
     cons.String('file_type', 12, padchar='\0'),
     cons.ULInt32('number_of_tables'),
     cons.ULInt32('offset'),
-    cons.MetaRepeater(lambda ctx: ctx['number_of_tables'], DRSTableAdapter(TABLE)),
-)
-
-EMBEDDED_FILE = cons.Struct('embedded_file',
-    cons.ULInt32('res_id'),
-    cons.ULInt32('offset'),
-    cons.ULInt32('size'),
+    cons.MetaRepeater(lambda ctx: ctx['number_of_tables'], TableAdapter(TABLE)),
 )
 
 def get_file_extension(resource_type):
@@ -34,14 +54,38 @@ def get_file_extension(resource_type):
     """
     return ''.join(reversed(struct.pack('=I', resource_type)[1:]))
 
-class DRSTable(object):
+class Table(object):
     """
         A DRS table. Holds multiple embedded files of the same type.
+
+        Caution: The actual file data is read *lazily*. That means, they are
+        construct `OnDemand` instances. You probably don't want *all*
+        resource files to be read at once since they're just chilling in your
+        memory then. If you want to access the actual data, use `get_data`;
+        but of course you need to do it before closing the stream.
+
+        If you really want to read all the embedded files into memory, use
+        the `read_all` method.
     """
-    def __init__(self, resource_type, offset, number_of_files):
+    def __init__(self, resource_type, offset, number_of_files, embedded_files):
         self.resource_type = resource_type
         self.offset = offset
         self.number_of_files = number_of_files
+        self.embedded_files = embedded_files
+
+    @property
+    def file_extension(self):
+        return get_file_extension(self.resource_type)
+
+    def get_data(self, resource_id):
+        """ get the binary data of a specific file. """
+        return embedded_files[resource_id].data.value
+
+    def read_all(self):
+        """ read ALL THE THINGS """
+        for f in self.embedded_files.itervalues():
+            if not f.data.has_value:
+                f.data.value
 
 class DRSFile(object):
     """
@@ -49,10 +93,12 @@ class DRSFile(object):
         data from a stream, but be careful: The stream position
         WILL NEVER BE THE SAME AGAIN!!1
 
-        Has multiple `DRSTable` objects.
+        Has multiple `Table` objects.
     """
-    def __init__(self):
+    def __init__(self, stream=None):
         self.header = None
+        if stream is not None:
+            self.parse_stream(stream)
 
     def parse_stream(self, stream):
         self.header = HEADER.parse_stream(stream)
@@ -61,23 +107,14 @@ class DRSFile(object):
     def tables(self):
         return self.header.tables
 
-def parse_files(drs, table):
-    drs.seek(table.offset)
-    files = []
+def get_all_files(stream):
+    """
+        get all embedded files from a DRS file. This yields
+        (resource type, resource id, data) tuples.
+    """
+    drs = DRSFile(stream)
+    for table in drs.tables:
+        ext = table.file_extension
+        for embedded in table.embedded_files.itervalues():
+            yield (table.resource_type, embedded.resource_id, embedded.data.value)
 
-    for idx in xrange(table.number_of_files):
-        files.append(embedded_file.parse_stream(drs))
-
-    return files
-
-def get_file(drs, embedded_file):
-    drs.seek(embedded_file.offset)
-    return drs.read(embedded_file.size)
-
-#with open('graphics.drs') as f:
-#    header = parse_headers(f)
-#    for table in header.tables:
-#        ext = get_file_extension(table.resource_type)
-#        for embedded_file in parse_files(f, table):
-#            with open('%d.%s' % (embedded_file.res_id, ext), 'w') as fil:
-#                fil.write(get_file(f, embedded_file))
