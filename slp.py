@@ -50,6 +50,7 @@ def build_palette(filename):
 
 PALETTE = build_palette('aoe1gamepalette1.png')
 
+print PALETTE
 #i = Image.new('RGB', (16*32, 16*32))
 #d = ImageDraw.ImageDraw(i)
 #for x in xrange(16):
