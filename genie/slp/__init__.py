@@ -1,3 +1,10 @@
+"""
+    A modular decoder for the SLP image format as used in the Genie engine.
+
+    Thanks to http://alexander-jenkins.co.uk/blog/?p=9 and to
+    http://www.digitization.org/wiki/index.php/SLP for the great documentation!
+"""
+
 import struct
 
 import construct as cons
