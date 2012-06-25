@@ -1,0 +1,177 @@
+
+AGE OF EMPIRES DRS RESOURCE FILES FORMAT DESCRIPTION
+
+Written by Stoyan Ratchev, sratchev@mail.techno-link.com
+
+Age of Empires a game by Microsoft & Ensemble Studios.
+All trademarks are property of their respective owners.
+
+************************************************************************
+
+The Age of Empires data resource (.DRS) files contain the resources 
+(graphics, sounds, other binary info) used by MS AoE. They are large 
+files that contain other smaller files (embedded files). Several people 
+worked on discovering the format of the .DRS files, so that builder/extractor 
+utilities (like DRSBUILD) or resource editors (like the Steve Chen's AoE 
+Sound Editor available on the Telcontar's AoE site) can be written. 
+This description is based on the marvelous work done by Cyrille Artho
+(cartho@netlink.ch) and Steve Chen (slchen@qte.net). Their description was
+available on the Telcontar's AoE site by 9 Nov 1997. After downloading it, 
+I found it was somewhat incomplete and slightly incorrect. I discovered the 
+rest of it, and claimed that it was the full description. Still there was 
+not much left to discover - Cyrille & Steve, thanks! It was pretty full 
+except for a single mysterious byte. After that an email from Matt Pritchard 
+the ES graphics & optimization specialist (MPritchard@EnsembleStudios.com)
+clarified it all. His description is of course the most adequate one, but 
+at least for now is considered a document to be used only by AoE utility 
+developers. Since I had already written my own description, I simply 
+slightly corrected it to make it full.
+
+Please note that this description comes with ABSOLUTELY NO WARRANTY
+of any kind, so use it at your own risk. 
+
+Microsoft (MS) and Age of Empires (AoE) are trademarks of Microsoft
+Corporation. All other trademarks are property of their respective owners.
+
+************************************************************************
+
+To illustrate the DRS file format I've chosen the file INTERFAC.DRS
+from the DATA folder (trial version). This is the most complicated one,
+in fact the only one to contain several tables of different types.
+All other DRS files contain a single table.
+
+1. Header
+
+The DRS header contains a copyright info string, a version string,
+a file type string ("tribe"), the number of tables in the DRS file
+and the offset of the first embedded file (or the overall header
+length, if you prefer that way).
+
+INTERFAC.DRS hex dump - header:
+-----------------------------------------------------------------------
+00000000 436F 7079 7269 6768 7420 2863 2920 3139 Copyright (c) 19
+00000010 3937 2045 6E73 656D 626C 6520 5374 7564 97 Ensemble Stud
+00000020 696F 732E 1A00 0000 312E 3030 7472 6962 ios.....1.00trib
+00000030 6500 0000 0000 0000 0400 0000 8C08 0000 e...............
+-----------------------------------------------------------------------
+
+Header Format:
+-----------------------------------------------------------------------
+Length 		Type	Description		INTERFAC.DRS
+-----------------------------------------------------------------------
+40 bytes        string  Copyright info		Copyright (c) 1997 Ensemble Studios\032.	
+4 bytes         string  File version 		1.00
+12 bytes        string  File type		tribe
+4 bytes         long	Number of tables	4, 0x00000004
+4 bytes         long    Offset of 1st file	2188, 0x0000088C
+-----------------------------------------------------------------------
+64 bytes total
+
+2. Table infos
+
+The information about all files of equal type is contained in a table with
+one entry for each embedded file. The number of such tables is determined from
+the DRS header. Before the tables there goes an array of table infos with
+information for each table. Each table info contains: the type (ResType) of the
+files in the table, the offset of the table in the "tables" section and the
+number of files in the table.
+
+INTERFAC.DRS hex dump - table infos (4 tables):
+-----------------------------------------------------------------------
+00000040 616E 6962 7000 0000 4700 0000 2070 6873 anibp...G... phs
+00000050 C403 0000 1300 0000 2070 6C73 A804 0000 ........ pls....
+00000060 4500 0000 2076 6177 E407 0000 0E00 0000 E... vaw........
+-----------------------------------------------------------------------
+
+Table Info Format:
+-----------------------------------------------------------------------
+Length 		Type	Description		INTERFAC.DRS (1st table info)
+-----------------------------------------------------------------------
+4 bytes         str/long Resource type		anib / 0x62696E61 - "bin" (binary) files
+4 bytes         long    Table offset		112, 0x00000070
+4 bytes         long	Number of files		71, 0x00000047
+-----------------------------------------------------------------------
+12 bytes total
+
+3. Tables
+
+Each table contains entries for the files in it. The table entry
+consists of: the unique integer identifier of the embedded file (ResId),
+the offset of the embedded file and the size of the embedded file.
+
+INTERFAC.DRS hex dump - tables (4 tables, 173 files):
+-----------------------------------------------------------------------
+00000070 51C3 0000 8C08 0000 7102 0000 52C3 0000 Q.......q...R...
+00000080 FD0A 0000 7B02 0000 53C3 0000 780D 0000 ....{...S...x...
+....
+00000870 3CBB 0000 90C4 0000 3367 D500 6027 0300 <.......3g..`'..
+00000880 91C4 0000 938E D800 C693 0300           ............
+-----------------------------------------------------------------------
+
+Table Entry Format:
+-----------------------------------------------------------------------
+Length 		Type	Description		INTERFAC.DRS (1st table, 1st entry)
+-----------------------------------------------------------------------
+4 bytes         long	File id			50001, 0x0000C351
+4 bytes         long    File offset		2188, 0x0000088C
+4 bytes         long	File size		625, 0x00000271
+-----------------------------------------------------------------------
+12 bytes total
+
+4. Embedded Files
+
+The embedded files follow in the order they appear in the tables. In
+INTERFAC,DRS, there are 4 tables - the 1st contains 71 various binary
+(.BIN) files (some of them are actually text files), the 2nd one contains 
+19 shape graphics files (.SHP), the 3rd one contains 69 .SLP graphics files 
+(.SLP), and the 4th one contains 14 wave sound files (.WAV). 
+The .SHP and the .SLP formats are proprietary to ES.
+
+INTERFAC.DRS hex dump - embedded files:
+-----------------------------------------------------------------------
+00000880                               6261 636B ............back
+00000890 6772 6F75 6E64 315F 6669 6C65 7320 2020 ground1_files   
+000008A0 2020 646C 6731 6E20 2020 6E6F 6E65 2020   dlg1n   none  
+000008B0 3530 3230 3020 202D 310D 0A62 6163 6B67 50200  -1..backg
+....
+00DC21E0 0004 0004 0003 0003 0003 0002 0003 0003 ................
+00DC21F0 0003 0002 0002 0003 0003 0003 004C 4953 .............LIS
+00DC2200 5454 0000 0049 4E46 4F49 5346 5434 0000 TT...INFOISFT4..
+00DC2210 0043 6F6F 6C20 4564 6974 2076 2E39 3620 .Cool Edit v.96 
+00DC2220 6279 2053 796E 7472 696C 6C69 756D 2053 by Syntrillium S
+00DC2230 6F66 7477 6172 6520 436F 7270 6F72 6174 oftware Corporat
+00DC2240 696F 6E00 0049 4352 440C 0000 0031 3939 ion..ICRD....199
+00DC2250 372D 3032 2D31 3900 0000                7-02-19..
+-----------------------------------------------------------------------
+
+As you can see from this description, the format is pretty clear.
+The single mysterious byte I mentioned was the first byte of the table info.
+It was clear that the next 3 bytes contain the reversed file extension.
+But why reversed? And what is the meaning of the first byte, after all?
+It is 'a' or 0x61 when the file extension is 'bin' and ' ' or 0x20 when
+the file extension is 'shp', 'slp' or 'wav'. This is true not only
+for INTERFAC.DRS, but for all other .DRS files (BORDER.DRS, TERRAIN.DRS,
+GRAPHICS.DRS, SOUNDS.DRS). An it's important! I tried to change it to ' ' 
+when it's normally 'a' (offset 0x40) and crashed the game. Probably nobody
+could solve the puzzle if it wasn't Matt Pritchard who came to help.
+As he explained, the first 4 bytes of the table info can be interpreted 
+not only as a string, but also as a long number which he called the ResType
+identifier. This explains why there are 4 and not 3 bytes and why the 
+extension is reversed - probably due to some compiler's cast.
+
+Why the first characters of the 4 resource types are different? The Matt's 
+description doesn't explain that. Since the resource types are checked as 
+long numbers, the first character should of course remain as it is for the 
+.DRS file format to be successfully validated. My own assumption is that 
+a first character of ' ' means "all files in the table are of the same type" - 
+exactly as .SHP, .SLP and .WAV tables are, and a first character of 'a' means 
+"there are different types of files in the table, they are kept in one table 
+only formally" - in fact, the .BIN table contains a strange collection of 
+mostly text files (3 different formats), 2 .BMP files and the file 
+TILEEDGE.DAT from the DATA folder. Of course, this is only an assumption, 
+any programs that process .DRS files should not rely on it or use it.
+
+************************************************************************
+Copyright (C) 1997 Stoyan Ratchev. All rights reserved.
+Last updated on 30 Nov 1997.
+
