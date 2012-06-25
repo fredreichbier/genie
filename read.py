@@ -44,11 +44,10 @@ def get_file(drs, embedded_file):
     drs.seek(embedded_file.offset)
     return drs.read(embedded_file.size)
 
-with open('Interfac.drs') as f:
+with open('graphics.drs') as f:
     header = parse_headers(f)
     for table in header.tables:
         ext = get_file_extension(table.resource_type)
-        if ext == 'wav':
-            for embedded_file in parse_files(f, table):
-                with open('%d.wav' % embedded_file.res_id, 'w') as wav:
-                    wav.write(get_file(f, embedded_file))
+        for embedded_file in parse_files(f, table):
+            with open('%d.%s' % (embedded_file.res_id, ext), 'w') as fil:
+                fil.write(get_file(f, embedded_file))
