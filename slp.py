@@ -44,7 +44,7 @@ def build_palette(filename):
     for tile_y in xrange(16):
         for tile_x in xrange(16):
             x, y = tile_x * tile_width + x_offset, tile_y * tile_height + y_offset
-            palette[tile_x * 16 + tile_y] = img.getpixel((x, y))
+            palette[tile_y * 16 + tile_x] = img.getpixel((x, y))
 
     return palette
 
@@ -60,7 +60,7 @@ PALETTE = build_palette('aoe1gamepalette1.png')
 PLAYER = 1
 
 def build_image(stream, frame):
-    img = Image.new('RGBA', (frame.width, frame.height), (255, 255, 255, 0))
+    img = Image.new('RGBA', (frame.width, frame.height), (255, 255, 255, 255))
     draw = ImageDraw.Draw(img)
 
     # Draw transparency mask
@@ -106,7 +106,6 @@ def build_image(stream, frame):
             color = (255, 255, 255, 0)
         else:
             color = PALETTE[palette_index] + (255,)
-        print amount, color
         if amount == 1:
             draw.point((x, y), fill=color)
         else:
@@ -138,8 +137,8 @@ def build_image(stream, frame):
             for _ in xrange(amount):
                  relindex = _get_byte()
                  _draw_pixels(1, _get_palette_index(PLAYER, relindex))
+                 x += 1
             # TODO!
-            x += amount
         elif fourbit == 0x07:
             # fill
             amount = _get_4ornext(opcode)
@@ -156,7 +155,7 @@ def build_image(stream, frame):
             print 'draw', amount
             for _ in xrange(amount):
                 _draw_pixels(1, _get_byte())
-            x += amount
+                x += 1
         elif twobit == 1:
             # 2ornext
             amount = opcode >> 2
@@ -170,7 +169,7 @@ def build_image(stream, frame):
             print 'big draw', amount
             for _ in xrange(amount):
                 _draw_pixels(1, _get_byte())
-            x += amount
+                x += 1
         elif twobit == 3:
             amount = _get_bigbig(opcode)
             print 'big skip', amount
