@@ -29,17 +29,20 @@ from PIL import Image, ImageDraw
 
 num = 666
 
+def build_image(stream, frame):
+    stream.seek(frame.outline_table_offset)
+
+    img = Image.new('RGBA', (frame.width, frame.height), (255, 255, 255, 255))
+    draw = ImageDraw.Draw(img)
+    for y in xrange(frame.height):
+        bounds = boundary.parse_stream(f)
+        draw.line((0, y, bounds.left, y), fill=(255, 255, 255, 0))
+        draw.line((frame.width, y, frame.width - bounds.right, y), fill=(255, 255, 255, 0))
+
+    del draw
+    return img
+
 with open('%d.slp' % num, 'r') as f:
     data = slp.parse_stream(f)
     for frame in data.frames:
-        f.seek(frame.outline_table_offset)
-        img = Image.new('RGB', (frame.width, frame.height), (255, 255, 255))
-        draw = ImageDraw.Draw(img)
-        for y in xrange(frame.height):
-            bounds = boundary.parse_stream(f)
-#            if bo.left == 0x8000:
-#                print 'HAHAH'
-            draw.line((0, y, bounds.left, y), fill=128)
-            draw.line((frame.width, y, frame.width - bounds.right, y), fill=128)
-        del draw
-        img.save('%d.png' % num, 'png')
+        build_image(f, frame).save('%d.png' % num, 'png')
