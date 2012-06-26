@@ -6,11 +6,18 @@ class PygletAdapter(RawAdapter):
     """
         An extension to the `RawAdapter`: return an `pyglet.image.ImageData` object.
     """
+    def __init__(self, frame):
+        RawAdapter.__init__(self, frame)
+        self.anchor_x, self.anchor_y = frame.hotspot_x, frame.hotspot_y
+
     def get_image(self):
         # We need to pass a negative stride here since the image
         # will be upside-down otherwise.
-        return ImageData(self.width, self.height,
+        img = ImageData(self.width, self.height,
                         'RGBA', str(self.array), -self.stride)
+        img.anchor_x = self.anchor_x
+        img.anchor_y = self.anchor_y
+        return img
 
 class MirroredPygletAdapter(PygletAdapter):
     """
