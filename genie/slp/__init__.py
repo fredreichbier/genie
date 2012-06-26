@@ -37,9 +37,9 @@ class ImageAdapter(object):
     """
         A generic image writer. Could be used with PIL, cairo, ...
     """
-    def __init__(self, width, height):
+    def __init__(self, frame):
         """
-            Create a new image with the given dimensions.
+            Create a new image with the dimensions given by the frame object.
         """
         raise NotImplementedError()
 
@@ -59,6 +59,10 @@ class ImageAdapter(object):
 class Frame(object):
     def __init__(self, structure):
         self.structure = structure
+        self.width = self.structure.width
+        self.height = self.structure.height
+        self.hotspot_x = self.structure.hotspot_x
+        self.hotspot_y = self.structure.hotspot_y
         self.slp_file = None # to be set later
 
     def parse_stream(self, stream, player=1, image_adapter_cls=None):
@@ -68,7 +72,7 @@ class Frame(object):
         width, height = self.structure.width, self.structure.height
         if image_adapter_cls is None:
             image_adapter_cls = self.slp_file.image_adapter_cls
-        adapter = image_adapter_cls(width, height)
+        adapter = image_adapter_cls(self)
 
         # First, the boundaries.
         stream.seek(self.structure.outline_table_offset)
@@ -214,7 +218,5 @@ class SLPFile(object):
         self.header = HEADER.parse_stream(stream)
         for frame in self.header.frames:
             frame.slp_file = self # TODO: not so nice
+        self.frames = self.header.frames
 
-    @property
-    def frames(self):
-        return self.header.frames

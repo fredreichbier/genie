@@ -22,11 +22,11 @@ class RawAdapter(ImageAdapter):
         per component).
         Return it as a string.
     """
-    def __init__(self, width, height):
+    def __init__(self, frame):
         self.pixel_size = 4 # 4 bytes per pixel (RGBA)
-        self.stride = width * self.pixel_size # this many pixels per row. yay.
-        self.width, self.height = width, height
-        self.array = bytearray(self.stride * height)
+        self.stride = frame.width * self.pixel_size # this many pixels per row. yay.
+        self.width, self.height = frame.width, frame.height
+        self.array = bytearray(self.stride * frame.height)
 
     def _get_byte_pos(self, x, y):
         return y * self.stride + x * self.pixel_size

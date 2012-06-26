@@ -3,8 +3,8 @@ from PIL import Image, ImageDraw
 from . import ImageAdapter
 
 class PILAdapter(ImageAdapter):
-    def __init__(self, width, height):
-        self.image = Image.new('RGBA', (width, height), (255, 255, 255, 255))
+    def __init__(self, frame):
+        self.image = Image.new('RGBA', (frame.width, frame.height), (255, 255, 255, 255))
         self.draw = ImageDraw.ImageDraw(self.image)
 
     def draw_pixels(self, x, y, amount, color):
