@@ -66,24 +66,21 @@ def load_aoe_animations(stream, slp_file, duration=0.1):
         per animation from that.
     """
     anims = {}
+
+    def _load_anim(idx, direction, mirrored=False):
+        anims[direction] = load_animation(stream, slp_file,
+                                            (idx * frames_per_direction,
+                                             (idx + 1) * frames_per_direction - 1),
+                                            duration,
+                                            mirrored)
+
     if len(slp_file.frames) % DIRECTIONS_IN_SLP:
         raise AnimationError('incompatible frame count: %d' % len(slp_file.frames))
     frames_per_direction = len(slp_file.frames) // DIRECTIONS_IN_SLP
-    # load original (in-file) animations
     for idx, direction in enumerate(ORIGINAL_ANIMATIONS):
-        anims[direction] = load_animation(stream, slp_file,
-                                    (
-                                        idx * frames_per_direction,
-                                        (idx + 1) * frames_per_direction - 1
-                                    ),
-                                    duration,
-                                    False)
+        # load original (in-file) animation
+        _load_anim(idx, direction, False)
         if direction in MIRRORED_ANIMATIONS:
-            anims[MIRRORED_ANIMATIONS[direction]] = load_animation(stream, slp_file,
-                                        (
-                                            idx * frames_per_direction,
-                                            (idx + 1) * frames_per_direction - 1
-                                        ),
-                                        duration,
-                                        True)
+            # if possible, load a mirrored animation
+            _load_anim(idx, MIRRORED_ANIMATIONS[direction], True)
     return anims
