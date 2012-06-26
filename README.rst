@@ -9,7 +9,7 @@ How to test
  * Install `Python`_, `construct`_ and `pyglet`_.
  * Copy the `graphics.drs` from the `Data` directory of your legal Age of
    Empires installation to this directory.
- * Run ``python test_pyglet.py``.
+ * Run ``python test_pyglet.py 684`` to get started and wildly press Q/W/E/D/C/X/Y/A.
 
 Resources
 ---------

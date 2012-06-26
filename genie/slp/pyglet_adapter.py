@@ -22,12 +22,13 @@ class MirroredPygletAdapter(PygletAdapter):
         # mirror dat. ehehehehehAHAHAHAHAH
         return y * self.stride + (self.width - x) * self.pixel_size
 
-def load_animation(stream, slp_file, frame_ids, duration=0.1, mirrored=False):
+def load_animation(stream, slp_file, frame_ids, duration=0.1, mirrored=False, player=1):
     """
         Load some frames from the slp fil into an `pyglet.image.Animation` instance.
         *frame_ids* is a tuple ``(first frame, last frame)`` (inclusive).
         *duration* is the number of seconds to display the frame.
         If the frames should be mirrored horizontally, pass True for *mirrored*.
+        You can also pass a player number as *player*.
 
         Return a `pyglet.image.Animation` instance.
     """
@@ -35,7 +36,7 @@ def load_animation(stream, slp_file, frame_ids, duration=0.1, mirrored=False):
     anim_frames = []
     for frame_id in xrange(frame_ids[0], frame_ids[1] + 1):
         frame = slp_file.frames[frame_id]
-        img = frame.parse_stream(stream, image_adapter_cls=adapter)
+        img = frame.parse_stream(stream, image_adapter_cls=adapter, player=player)
         anim_frames.append(AnimationFrame(img, duration))
     return Animation(anim_frames)
 
@@ -56,7 +57,7 @@ DIRECTIONS_IN_SLP = 5
 class AnimationError(Exception):
     pass
 
-def load_aoe_animations(stream, slp_file, duration=0.1):
+def load_aoe_animations(stream, slp_file, duration=0.1, player=1):
     """
         Load AOE animations. Return a dictionary ``{ direction: Animation instance }``
         where *direction* is a number from 0-9. Look at your numpad.
@@ -64,6 +65,8 @@ def load_aoe_animations(stream, slp_file, duration=0.1):
         The actual count of frames per direction varies, but there always are
         5 directions stored in one SLP file, so we can calculate the frame count
         per animation from that.
+
+        :todo: Just use `pyglet.image.Animation.get_transform` for the flips.
     """
     anims = {}
 
@@ -72,7 +75,8 @@ def load_aoe_animations(stream, slp_file, duration=0.1):
                                             (idx * frames_per_direction,
                                              (idx + 1) * frames_per_direction - 1),
                                             duration,
-                                            mirrored)
+                                            mirrored,
+                                            player)
 
     if len(slp_file.frames) % DIRECTIONS_IN_SLP:
         raise AnimationError('incompatible frame count: %d' % len(slp_file.frames))
