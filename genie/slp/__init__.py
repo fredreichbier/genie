@@ -118,7 +118,7 @@ class Frame(object):
 
         def _get_bigbig(opcode):
             """ right-shift 4 bits to the right + next byte """
-            return (opcode >> 4) + _get_byte()
+            return ((opcode & 0xf0) << 4) + _get_byte()
 
         def _draw_pixels(amount, palette_index):
             assert x + amount <= width
@@ -157,6 +157,35 @@ class Frame(object):
                      relindex = _get_byte()
                      _draw_pixels(1, _get_palette_index(player, relindex))
                      x += 1
+            elif fourbit == 0x0e:
+                # Extended command (shadows etc.)
+                # get the high 4 bits for the extended command
+                # I only found information about this opcode in
+                # the slp.rtf file (see README).
+                # For now, this doesn't actually do anything apart
+                # from reading the correct number of bytes from the
+                # stream to parse the image data correctly.
+                extended = opcode >> 4
+                if extended == 0:
+                    # woho! this should only be drawn if the
+                    # sprite is not x-flipped. TODO.
+                    pass
+                elif extended == 1:
+                    # this should only be drawn if the sprite
+                    # is x-flipped. TODO.
+                    pass
+                elif extended in (2, 3):
+                    # do some fiddling with transform color tables.
+                    # see documentation.
+                    pass
+                elif extended in (4, 6):
+                    # special color 1/2, but only 1 byte.
+                    pass
+                elif extended in (5, 7):
+                    # special color 1/2, read amount from stream.
+                    amount = _get_byte()
+                else:
+                    raise NotImplementedError('Unknown extended opcode: %r' % extended)
             elif fourbit == 0x07:
                 # fill
                 amount = _get_4ornext(opcode)
@@ -169,6 +198,8 @@ class Frame(object):
                 #print 'player fill', amount
                 _draw_pixels(amount, _get_palette_index(player, _get_byte()))
                 x += amount
+            elif fourbit in (0x4e, 0x5e, 0x0b):
+                raise NotImplementedError('The 0x%x opcode is not yet implemented.' % fourbit)
             elif twobit == 0:
                 # draw
                 amount = opcode >> 2
