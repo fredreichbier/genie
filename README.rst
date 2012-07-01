@@ -23,6 +23,7 @@ DRS and SLP formats and the Age of Empires SLP files:
  * http://aoe.heavengames.com/downsnew/dlfiles/misc/slplist.zip
  * http://www.ferazelhosting.net/~bryce/re.html
  * http://www.ferazelhosting.net/~bryce/slp.rtf
+ * http://www.cryer.co.uk/file-types/p/pal.htm
 
 Thank you very much!
 

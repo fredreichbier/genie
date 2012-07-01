@@ -9,7 +9,7 @@ import struct
 
 import construct as cons
 
-from .palette import AOE1_PALETTE
+from .builtin_palettes import AOE2_PALETTE
 
 class FrameAdapter(cons.Adapter):
     def _decode(self, obj, context):
@@ -238,7 +238,7 @@ class SLPFile(object):
         an `ImageAdapter` subclass (or factory function) to build images, also,
         a palette dictionary (AOE1 is the default).
     """
-    def __init__(self, image_adapter_cls, stream=None, palette=AOE1_PALETTE):
+    def __init__(self, image_adapter_cls, stream=None, palette=AOE2_PALETTE):
         self.header = None
         self.image_adapter_cls = image_adapter_cls
         self.palette = palette
