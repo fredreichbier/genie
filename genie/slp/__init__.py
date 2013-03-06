@@ -30,7 +30,7 @@ HEADER = cons.Struct('header',
     cons.String('version', 4),
     cons.ULInt32('num_frames'),
     cons.String('comment', 24),
-    cons.MetaRepeater(lambda ctx: ctx['num_frames'], FrameAdapter(FRAME)),
+    cons.Array(lambda ctx: ctx['num_frames'], FrameAdapter(FRAME)),
 )
 
 class ImageAdapter(object):

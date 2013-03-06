@@ -33,7 +33,7 @@ TABLE = cons.Struct('tables',
     cons.ULInt32('offset'),
     cons.ULInt32('number_of_files'),
     cons.Pointer(lambda ctx: ctx['offset'],
-        cons.MetaRepeater(lambda ctx: ctx['number_of_files'],
+        cons.Array(lambda ctx: ctx['number_of_files'],
             EMBEDDED_FILE
         )
     )
@@ -45,7 +45,7 @@ HEADER = cons.Struct('header',
     cons.String('file_type', 12, padchar='\0'),
     cons.ULInt32('number_of_tables'),
     cons.ULInt32('offset'),
-    cons.MetaRepeater(lambda ctx: ctx['number_of_tables'], TableAdapter(TABLE)),
+    cons.Array(lambda ctx: ctx['number_of_tables'], TableAdapter(TABLE)),
 )
 
 def get_file_extension(resource_type):

@@ -5,6 +5,7 @@ import pyglet
 
 from genie import slp, drs
 from genie.slp.pyglet_adapter import PygletAdapter, load_aoe_animations
+from genie.slp.builtin_palettes import AOE1_PALETTE
 
 try:
     num = int(sys.argv[1])
@@ -31,7 +32,7 @@ def get_pyglet_animation(num):
     with open('graphics.drs', 'r') as stream:
         drs_file = drs.DRSFile(stream)
         slp_stream = StringIO(drs_file.get_data(num))
-        slp_file = slp.SLPFile(PygletAdapter, slp_stream)
+        slp_file = slp.SLPFile(PygletAdapter, slp_stream, palette=AOE1_PALETTE)
         return load_aoe_animations(slp_stream, slp_file, player=player)
 
 anims = get_pyglet_animation(num)
