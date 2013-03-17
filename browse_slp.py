@@ -101,11 +101,11 @@ class SLPView(object):
 
     def display(self, frame):
         width, height = frame.width, frame.height
-        self.window.width = width
+        self.label.text = '#%d (%d total)' % (self.current, len(self.frames))
+        self.window.width = max(self.label.content_width, width)
         self.window.height = height + BAR_HEIGHT
         self.sprite.image = frame
         self.sprite.set_position(frame.anchor_x, frame.anchor_y + BAR_HEIGHT)
-        self.label.text = '#%d (%d total)' % (self.current, len(self.frames))
 
     def on_draw(self):
         self.window.clear()
