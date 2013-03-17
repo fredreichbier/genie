@@ -276,9 +276,9 @@ class SLPBrowser(cmd.Cmd):
             print 'Gimme an integer :-('
         self.loader.palette = idx
 
-    def do_player(self, index_str):
+    def do_player(self, idx_str):
         """
-            Set the player index (0-7).
+            Set the player index (0-8).
         """
         try:
             idx = int(idx_str)
