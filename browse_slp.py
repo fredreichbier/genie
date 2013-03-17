@@ -207,10 +207,22 @@ if __name__ == '__main__':
     parser.add_argument('--player', dest='player', metavar='PLAYER', type=int,
                         default=1,
                         help='The player ID to display (defaults to 1)')
+    parser.add_argument('-c', metavar='COMMAND', type=str, dest='commands',
+                        action='append',
+                        help='Command to execute, can be passed multiple times.')
+    parser.add_argument('--batch', dest='batch_mode', default=False,
+                        action='store_true',
+                        help='If this is set, the command loop is not entered.')
 
     args = parser.parse_args()
     loader = SLPLoader(args.path, args.player_command)
+    # autoload drs
     if args.drs_filename:
         loader.drs_filename = args.drs_filename
     browser = SLPBrowser(loader)
-    browser.cmdloop()
+    # execute commands
+    if args.commands:
+        for command in args.commands:
+            browser.onecmd(command)
+    if not args.batch_mode:
+        browser.cmdloop()
