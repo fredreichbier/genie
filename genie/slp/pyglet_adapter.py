@@ -27,7 +27,13 @@ class MirroredPygletAdapter(PygletAdapter):
         Exactly like the above, it's just mirrored. For simplicity, since
         Age Of Empires doesn't store all the animation directions, you have
         to mirror the existing frames to get the missing images.
+
+        Also, flip the X anchor if needed.
     """
+    def __init__(self, frame):
+        PygletAdapter.__init__(self, frame)
+        self.anchor_x = frame.width - self.anchor_x
+
     def _get_byte_pos(self, x, y):
         # mirror dat. ehehehehehAHAHAHAHAH
         return y * self.stride + (self.width - x) * self.pixel_size
