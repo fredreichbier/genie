@@ -109,6 +109,7 @@ class BaseSLPView(object):
         self.window = pyglet.window.Window(width=100, height=100)
         self.window.push_handlers(self)
         self.label = pyglet.text.Label('', font_size=12, x=0, y=0)
+        self.show_hotspot = False
 
     def resize_window(self):
         self.set_sprite_position()
@@ -119,6 +120,18 @@ class BaseSLPView(object):
         self.window.clear()
         self.sprite.draw()
         self.label.draw()
+        if self.show_hotspot:
+            self.draw_hotspot()
+
+    def _draw_hotspot(self, x, y):
+        pyglet.gl.glPointSize(3 * self.sprite.scale)
+        pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,
+                ('v2f', (x, y)),
+                ('c4B', (255, 0, 0, 0)))
+        pyglet.gl.glPointSize(1)
+
+    def draw_hotspot(self):
+        raise NotImplementedError()
 
     def zoom(self, factor):
         self.sprite.scale += factor * 0.2
@@ -128,6 +141,8 @@ class BaseSLPView(object):
         if symbol == pyglet.window.key.Q:
             self.window.close()
             pyglet.app.exit()
+        if symbol == pyglet.window.key.A:
+            self.show_hotspot = not self.show_hotspot
         if symbol == pyglet.window.key.PLUS:
             self.zoom(1)
         if symbol == pyglet.window.key.MINUS:
@@ -145,6 +160,12 @@ class SLPView(BaseSLPView):
         self.frames = frames
 
         self.display(frames[0])
+
+    def draw_hotspot(self):
+        """
+            This is easy, we can just use the sprite's anchor.
+        """
+        self._draw_hotspot(self.sprite.x, self.sprite.y)
 
     def set_sprite_position(self):
         self.sprite.set_position(
@@ -195,6 +216,13 @@ class AnimatedSLPView(BaseSLPView):
         self.sprite.image = self.anims[anim_index]
         self.resize_window()
 
+    def draw_hotspot(self):
+        """
+            This is not so easy.
+        """
+        print 'This is not implemented yet ...'
+        # TODO: we'd need the hotspot of the currently active animation frame?
+
     def set_sprite_position(self):
         image = self.anims[self.current_anim].frames[0].image
         self.sprite.set_position(
@@ -209,6 +237,7 @@ class AnimatedSLPView(BaseSLPView):
 HELP_SHOW = """Now showing %r. Keys:
 \tq\treturn to prompt
 \t+/-\tzoom
+\ta\tshow the frame hotspot
 """
 HELP_SHOW_ANIM = HELP_SHOW + """
 \t7 8 9

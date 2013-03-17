@@ -8,7 +8,10 @@ class PygletAdapter(RawAdapter):
     """
     def __init__(self, frame):
         RawAdapter.__init__(self, frame)
-        self.anchor_x, self.anchor_y = frame.hotspot_x, frame.hotspot_y
+        # Since genie *seems* to specify the hotspot relative to
+        # the top left corner and pyglet wants it relative to the
+        # bottom left corner, we need to do some calculations here.
+        self.anchor_x, self.anchor_y = frame.hotspot_x, frame.height - frame.hotspot_y
 
     def get_image(self):
         # We need to pass a negative stride here since the image
