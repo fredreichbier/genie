@@ -7,9 +7,12 @@ How to test
 -----------
 
  * Install `Python`_, `construct`_ and `pyglet`_.
- * Copy the `graphics.drs` from the `Data` directory of your legal Age of
-   Empires installation to this directory.
- * Run ``python test_pyglet.py 684`` to get started and wildly press Q/W/E/D/C/X/Y/A.
+ * Run `python browse_slp.py path/to/your/AOE/directory`
+ * This automatically loads `graphics.drs`.
+ * You can now enter `ls` to see all available files,
+   `play ID` to play a WAV file, `show ID` to display a SLP
+   file and, if you're feeling lucky, `showanim ID` to display
+   an animated SLP file.
 
 Resources
 ---------
