@@ -9,11 +9,9 @@ import struct
 
 import construct as cons
 
-from .builtin_palettes import AOE2_PALETTE
-
 class FrameAdapter(cons.Adapter):
     def _decode(self, obj, context):
-        return Frame(obj)
+        return Frame(context['_']['slp_file'], obj)
 
 FRAME = cons.Struct('frames',
     cons.ULInt32('cmd_table_offset'),
@@ -57,18 +55,20 @@ class ImageAdapter(object):
         raise NotImplementedError()
 
 class Frame(object):
-    def __init__(self, structure):
+    def __init__(self, slp_file, structure):
+        self.slp_file = slp_file
         self.structure = structure
         self.width = self.structure.width
         self.height = self.structure.height
         self.hotspot_x = self.structure.hotspot_x
         self.hotspot_y = self.structure.hotspot_y
-        self.slp_file = None # to be set later
 
-    def parse_stream(self, stream, player=1, image_adapter_cls=None):
+    def parse_stream(self, player=1, image_adapter_cls=None):
         """
             Use the image adapter class to create an image.
         """
+        stream = self.slp_file.stream
+
         width, height = self.structure.width, self.structure.height
         if image_adapter_cls is None:
             image_adapter_cls = self.slp_file.image_adapter_cls
@@ -238,16 +238,10 @@ class SLPFile(object):
         an `ImageAdapter` subclass (or factory function) to build images, also,
         a palette dictionary (AOE1 is the default).
     """
-    def __init__(self, image_adapter_cls, stream=None, palette=AOE2_PALETTE):
+    def __init__(self, stream, palette, image_adapter_cls):
         self.header = None
-        self.image_adapter_cls = image_adapter_cls
         self.palette = palette
-        if stream is not None:
-            self.parse_stream(stream)
-
-    def parse_stream(self, stream):
-        self.header = HEADER.parse_stream(stream)
-        for frame in self.header.frames:
-            frame.slp_file = self # TODO: not so nice
+        self.image_adapter_cls = image_adapter_cls
+        self.stream = stream
+        self.header = HEADER._parse(stream, cons.Container(slp_file=self))
         self.frames = self.header.frames
-

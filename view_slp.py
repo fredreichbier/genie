@@ -1,40 +1,34 @@
 import sys
+import argparse
 from StringIO import StringIO
 
 import pyglet
 
 from genie import slp, drs
+from genie.environment import Environment
 from genie.slp.pyglet_adapter import PygletAdapter, load_aoe_animations
-from genie.slp.builtin_palettes import AOE1_PALETTE
 
-try:
-    num = int(sys.argv[1])
-except (ValueError, IndexError):
-    print 'python view_slp.py NUMBER [PLAYER] [DRS_FILE]'
-    sys.exit(1)
+parser = argparse.ArgumentParser(description='View SLP files.')
+parser.add_argument('path', metavar='PATH', type=str,
+                    help='The game data location')
+parser.add_argument('res_id', metavar='RESOURCE', type=int,
+                    help='The SLP resource ID')
+parser.add_argument('--drs', dest='drs_filename', metavar='FILENAME', type=str,
+                    default='graphics.drs',
+                    help='The DRS file to open (defaults to graphics.drs)')
+parser.add_argument('--player', dest='player', metavar='PLAYER', type=int,
+                    default=1,
+                    help='The player ID to display (defaults to 1)')
 
-try:
-    player = int(sys.argv[2])
-except IndexError:
-    player = 1
-except ValueError:
-    print 'Wat? `%s`' % sys.argv[2]
-    sys.exit(1)
+args = parser.parse_args()
 
-try:
-    drs_filename = sys.argv[3]
-except IndexError:
-    drs_filename = 'graphics.drs'
-
+env = Environment(args.path)
 BAR_HEIGHT = 12
 
 frames = []
-with open(drs_filename, 'r') as stream:
-    drs_file = drs.DRSFile(stream)
-    slp_stream = StringIO(drs_file.get_data(num))
-    slp_file = slp.SLPFile(PygletAdapter, slp_stream, palette=AOE1_PALETTE)
-    for frame in slp_file.frames:
-        frames.append(frame.parse_stream(slp_stream))
+slp_file = env.get_slp(args.drs_filename, args.res_id, PygletAdapter)
+for frame in slp_file.frames:
+    frames.append(frame.parse_stream())
 
 current = 0
 window = pyglet.window.Window(width=100, height=100)

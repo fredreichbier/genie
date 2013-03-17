@@ -12,7 +12,8 @@ import construct as cons
 
 class TableAdapter(cons.Adapter):
     def _decode(self, obj, context):
-        return Table(obj['resource_type'],
+        return Table(context['_']['drs_file'],
+                        obj['resource_type'],
                         obj['offset'],
                         obj['number_of_files'],
                         dict((f.resource_id, f) for f in obj['embedded_files']))
@@ -21,11 +22,13 @@ EMBEDDED_FILE = cons.Struct('embedded_files',
     cons.ULInt32('resource_id'),
     cons.ULInt32('offset'),
     cons.ULInt32('size'),
-    cons.OnDemand(
-        cons.Pointer(lambda ctx: ctx['offset'],
-            cons.MetaField('data', lambda ctx: ctx['size'])
-        )
-    )
+#    cons.OnDemand(
+#        cons.Pointer(lambda ctx: ctx['offset'],
+#            cons.MetaField('data', lambda ctx: ctx['size'])
+#        )
+#    )
+    # We're not parsing it on demand anymore cause we don't want
+    # construct to keep a reference to the file stream forever.
 )
 
 TABLE = cons.Struct('tables',
@@ -67,7 +70,8 @@ class Table(object):
         If you really want to read all the embedded files into memory, use
         the `read_all` method.
     """
-    def __init__(self, resource_type, offset, number_of_files, embedded_files):
+    def __init__(self, drs_file, resource_type, offset, number_of_files, embedded_files):
+        self.drs_file = drs_file
         self.resource_type = resource_type
         self.offset = offset
         self.number_of_files = number_of_files
@@ -79,13 +83,18 @@ class Table(object):
 
     def get_data(self, resource_id):
         """ get the binary data of a specific file. """
-        return self.embedded_files[resource_id].data.value
+        stream = self.drs_file.stream
+        embedded = self.embedded_files[resource_id]
+        old_offset = stream.tell()
+        stream.seek(embedded.offset)
+        data = stream.read(embedded.size)
+        stream.seek(old_offset)
+        return data
 
     def read_all(self):
         """ read ALL THE THINGS """
         for f in self.embedded_files.itervalues():
-            if not f.data.has_value:
-                f.data.value
+            self.get_data(f.resource_id)
 
 class DRSFile(object):
     """
@@ -95,13 +104,9 @@ class DRSFile(object):
 
         Has multiple `Table` objects.
     """
-    def __init__(self, stream=None):
-        self.header = None
-        if stream is not None:
-            self.parse_stream(stream)
-
-    def parse_stream(self, stream):
-        self.header = HEADER.parse_stream(stream)
+    def __init__(self, stream):
+        self.stream = stream
+        self.header = HEADER._parse(stream, cons.Container(drs_file=self))
 
     @property
     def tables(self):
@@ -128,5 +133,5 @@ def get_all_files(stream):
     for table in drs.tables:
         ext = table.file_extension
         for embedded in table.embedded_files.itervalues():
-            yield (table.resource_type, embedded.resource_id, embedded.data.value)
+            yield (table.resource_type, embedded.resource_id, table.get_data(embedded.resource_id))
 
