@@ -70,14 +70,15 @@ class SLPLoader(object):
 
     def get_frames(self, resource_id):
         slp_file = self.env.get_slp(self.drs_filename, resource_id, PygletAdapter, self.palette)
-        return [frame.parse_stream() for frame in slp_file.frames]
+        return [frame.parse_stream(player=self.player) for frame in slp_file.frames]
 
     def show_resource(self, resource_id):
         """
             Show the given SLP file.
         """
         frames = self.get_frames(resource_id)
-        display_slp(frames)
+        view = SLPView(frames)
+        pyglet.app.run()
 
     def show_animated_resource(self, resource_id):
         """
@@ -295,11 +296,6 @@ class SLPBrowser(cmd.Cmd):
             self.loader.play_filename(name)
         except:
             traceback.print_exc()
-
-def display_slp(frames):
-    """ display SLP frames. blocks until the user presses q """
-    view = SLPView(frames)
-    pyglet.app.run()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='View SLP files.')
