@@ -100,17 +100,25 @@ class SLPView(object):
         self.display(frames[0])
 
     def display(self, frame):
-        width, height = frame.width, frame.height
-        self.label.text = '#%d (%d total)' % (self.current, len(self.frames))
-        self.window.width = max(self.label.content_width, width)
-        self.window.height = height + BAR_HEIGHT
         self.sprite.image = frame
-        self.sprite.set_position(frame.anchor_x, frame.anchor_y + BAR_HEIGHT)
+        self.label.text = '#%d (%d total)' % (self.current, len(self.frames))
+        self.resize_window()
+
+    def resize_window(self):
+        self.sprite.set_position(
+                self.frames[self.current].anchor_x * self.sprite.scale,
+                self.frames[self.current].anchor_y * self.sprite.scale + BAR_HEIGHT)
+        self.window.width = max(self.label.content_width, self.sprite.width)
+        self.window.height = self.sprite.height + BAR_HEIGHT
 
     def on_draw(self):
         self.window.clear()
         self.sprite.draw()
         self.label.draw()
+
+    def zoom(self, factor):
+        self.sprite.scale += factor * 0.2
+        self.resize_window()
 
     def on_key_press(self, symbol, modifiers):
         new_current = self.current
@@ -121,6 +129,10 @@ class SLPView(object):
         if symbol == pyglet.window.key.Q:
             self.window.close()
             pyglet.app.exit()
+        if symbol == pyglet.window.key.PLUS:
+            self.zoom(1)
+        if symbol == pyglet.window.key.MINUS:
+            self.zoom(-1)
         if new_current != self.current:
             if new_current < 0:
                 new_current = len(self.frames) - 1
@@ -164,7 +176,9 @@ class SLPBrowser(cmd.Cmd):
             Show the given SLP file!
         """
         try:
-            print "Now showing %r ... press Q to return to the prompt." % name
+            print "Now showing %r. Keys:" % name
+            print "\tq\treturn to prompt"
+            print "\t+/-\tzoom"
             self.loader.show_filename(name)
         except:
             traceback.print_exc()
