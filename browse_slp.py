@@ -24,6 +24,7 @@ class SLPLoader(object):
         self._drs_filename = None
         self.audio_player = audio_player
         self.palette = 0
+        self.player = 0
 
     def _set_drs_filename(self, drs_filename):
         self._drs_filename = drs_filename
@@ -46,12 +47,15 @@ class SLPLoader(object):
                 fname = '%d.%s' % (embedded.resource_id, table.file_extension)
                 yield (embedded.resource_id, fname)
 
-    def show_filename(self, filename):
+    def show_filename(self, filename, anim=False):
         """
             show the given filename. shortcut.
         """
         resource_id = _get_resource_id(filename)
-        self.show_resource(resource_id)
+        if anim:
+            self.show_animated_resource(resource_id)
+        else:
+            self.show_resource(resource_id)
 
     def play_filename(self, filename):
         self.play_resource(_get_resource_id(filename))
@@ -69,8 +73,20 @@ class SLPLoader(object):
         return [frame.parse_stream() for frame in slp_file.frames]
 
     def show_resource(self, resource_id):
+        """
+            Show the given SLP file.
+        """
         frames = self.get_frames(resource_id)
         display_slp(frames)
+
+    def show_animated_resource(self, resource_id):
+        """
+            Show the given SLP file as an animation.
+        """
+        slp_file = self.env.get_slp(self.drs_filename, resource_id, PygletAdapter, self.palette)
+        anims = load_aoe_animations(slp_file, player=self.player)
+        view = AnimatedSLPView(anims)
+        pyglet.app.run()
 
     def get_matching(self, pattern):
         """
@@ -82,33 +98,20 @@ class SLPLoader(object):
             if fnmatch.fnmatch(filename, pattern):
                 yield (resource_id, filename)
 
-class SLPView(object):
+class BaseSLPView(object):
     """
         A simple display window for SLP files.
 
         Exits the pyglet main loop when the user presses q.
     """
-    def __init__(self, frames):
-        self.current = 0
-        self.frames = frames
-
+    def __init__(self):
         self.window = pyglet.window.Window(width=100, height=100)
         self.window.push_handlers(self)
-        self.sprite = pyglet.sprite.Sprite(self.frames[0])
-        self.label = pyglet.text.Label('Foo', font_size=12, x=0, y=0)
-
-        self.display(frames[0])
-
-    def display(self, frame):
-        self.sprite.image = frame
-        self.label.text = '#%d (%d total)' % (self.current, len(self.frames))
-        self.resize_window()
+        self.label = pyglet.text.Label('', font_size=12, x=0, y=0)
 
     def resize_window(self):
-        self.sprite.set_position(
-                self.frames[self.current].anchor_x * self.sprite.scale,
-                self.frames[self.current].anchor_y * self.sprite.scale + BAR_HEIGHT)
-        self.window.width = max(self.label.content_width, self.sprite.width)
+        self.set_sprite_position()
+        self.window.width = max(self.label.content_width, int(self.sprite.x) + self.sprite.width)
         self.window.height = self.sprite.height + BAR_HEIGHT
 
     def on_draw(self):
@@ -121,11 +124,6 @@ class SLPView(object):
         self.resize_window()
 
     def on_key_press(self, symbol, modifiers):
-        new_current = self.current
-        if symbol == pyglet.window.key.RIGHT:
-            new_current += 1
-        if symbol == pyglet.window.key.LEFT:
-            new_current -= 1
         if symbol == pyglet.window.key.Q:
             self.window.close()
             pyglet.app.exit()
@@ -133,11 +131,88 @@ class SLPView(object):
             self.zoom(1)
         if symbol == pyglet.window.key.MINUS:
             self.zoom(-1)
+
+class SLPView(BaseSLPView):
+    """
+        Display a simple, non-animated SLP with multiple frames.
+    """
+    def __init__(self, frames):
+        BaseSLPView.__init__(self)
+        self.sprite = pyglet.sprite.Sprite(frames[0])
+
+        self.current = 0
+        self.frames = frames
+
+        self.display(frames[0])
+
+    def set_sprite_position(self):
+        self.sprite.set_position(
+                self.frames[self.current].anchor_x * self.sprite.scale,
+                self.frames[self.current].anchor_y * self.sprite.scale + BAR_HEIGHT)
+
+    def display(self, frame):
+        self.sprite.image = frame
+        self.label.text = '#%d (%d total)' % (self.current, len(self.frames))
+        self.resize_window()
+
+    def on_key_press(self, symbol, modifiers):
+        BaseSLPView.on_key_press(self, symbol, modifiers)
+        new_current = self.current
+        if symbol == pyglet.window.key.RIGHT:
+            new_current += 1
+        if symbol == pyglet.window.key.LEFT:
+            new_current -= 1
         if new_current != self.current:
             if new_current < 0:
                 new_current = len(self.frames) - 1
             self.current = new_current % len(self.frames)
             self.display(self.frames[self.current])
+
+class AnimatedSLPView(BaseSLPView):
+    """
+        Display an animated SLP (AOE-compatible) with the ability to switch animations.
+    """
+    KEYS = {
+        pyglet.window.key._4: 4,
+        pyglet.window.key._7: 7,
+        pyglet.window.key._8: 8,
+        pyglet.window.key._9: 9,
+        pyglet.window.key._6: 6,
+        pyglet.window.key._3: 3,
+        pyglet.window.key._2: 2,
+        pyglet.window.key._1: 1,
+    }
+
+    def __init__(self, anims):
+        BaseSLPView.__init__(self)
+        self.sprite = pyglet.sprite.Sprite(anims[4])
+        self.anims = anims
+        self.current_anim = 4
+        self.display(4)
+
+    def display(self, anim_index):
+        self.sprite.image = self.anims[anim_index]
+        self.resize_window()
+
+    def set_sprite_position(self):
+        image = self.anims[self.current_anim].frames[0].image
+        self.sprite.set_position(
+                image.anchor_x * self.sprite.scale,
+                image.anchor_y * self.sprite.scale + BAR_HEIGHT)
+
+    def on_key_press(self, symbol, modifiers):
+        BaseSLPView.on_key_press(self, symbol, modifiers)
+        if symbol in self.KEYS:
+            self.display(self.KEYS[symbol])
+
+HELP_SHOW = """Now showing %r. Keys:
+\tq\treturn to prompt
+\t+/-\tzoom
+"""
+HELP_SHOW_ANIM = HELP_SHOW + """
+\t7 8 9
+\t4   6
+\t1 2 3\tshow the corresponding animation"""
 
 class SLPBrowser(cmd.Cmd):
     def __init__(self, loader):
@@ -176,10 +251,18 @@ class SLPBrowser(cmd.Cmd):
             Show the given SLP file!
         """
         try:
-            print "Now showing %r. Keys:" % name
-            print "\tq\treturn to prompt"
-            print "\t+/-\tzoom"
+            print HELP_SHOW % name
             self.loader.show_filename(name)
+        except:
+            traceback.print_exc()
+
+    def do_showanim(self, name):
+        """
+            Show the given SLP file ... as an animation!
+        """
+        try:
+            print HELP_SHOW_ANIM % name
+            self.loader.show_filename(name, True)
         except:
             traceback.print_exc()
 
@@ -192,6 +275,16 @@ class SLPBrowser(cmd.Cmd):
         except ValueError:
             print 'Gimme an integer :-('
         self.loader.palette = idx
+
+    def do_player(self, index_str):
+        """
+            Set the player index (0-7).
+        """
+        try:
+            idx = int(idx_str)
+        except ValueError:
+            print 'Gimme an integer :-('
+        self.loader.player = idx
 
     def do_play(self, name):
         """
@@ -233,6 +326,9 @@ if __name__ == '__main__':
     # autoload drs
     if args.drs_filename:
         loader.drs_filename = args.drs_filename
+    # set player
+    if args.player:
+        loader.player = args.player
     browser = SLPBrowser(loader)
     # execute commands
     if args.commands:

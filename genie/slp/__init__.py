@@ -79,7 +79,7 @@ class Frame(object):
         left_boundaries = []
         for y in xrange(height):
             left, right = struct.unpack('=HH', stream.read(4))
-            if left == right == 0x8000:
+            if (left == 0x8000 or right == 0x8000):
                 # fully transparent row
                 adapter.draw_pixels(0, y, width, None)
                 # this will tell the parser to skip this line later.
@@ -131,6 +131,20 @@ class Frame(object):
         def _get_palette_index(player, relindex):
             return player * 16 + relindex
 
+        def _draw_special_color(amount, index):
+            """
+                index = 2: player color
+                index = 1: black. (or so?)
+
+                This contradicts Bryce's SLP.rtf, but it looks pretty strange
+                if 1 is the player color. TODO?
+            """
+            if index == 2:
+                palette_index = _get_palette_index(player, 0)
+            else:
+                palette_index = 0
+            _draw_pixels(amount, palette_index)
+
         while y < height:
             opcode = _get_byte()
             twobit = opcode & 0b11
@@ -166,8 +180,7 @@ class Frame(object):
                 # from reading the correct number of bytes from the
                 # stream to parse the image data correctly.
                 extended = opcode >> 4
-                if extended not in (4,6,5,7):
-                    print 'Extended command!', extended
+                #print 'Extended command!', extended
                 if extended == 0:
                     # woho! this should only be drawn if the
                     # sprite is not x-flipped. TODO.
@@ -182,11 +195,12 @@ class Frame(object):
                     pass
                 elif extended in (4, 6):
                     # special color 1/2, but only 1 byte.
+                    _draw_special_color(1, {4: 1, 6: 2}[extended])
                     x += 1
-                    pass
                 elif extended in (5, 7):
                     # special color 1/2, read amount from stream.
                     amount = _get_byte()
+                    _draw_special_color(amount, {5: 1, 7: 2}[extended])
                     x += amount
                 else:
                     raise NotImplementedError('Unknown extended opcode: %r' % extended)
@@ -200,9 +214,14 @@ class Frame(object):
             elif fourbit == 0x0a:
                 amount = _get_4ornext(opcode)
                 #print 'player fill', amount
+                # TODO: this is not really correct
                 _draw_pixels(amount, _get_palette_index(player, _get_byte()))
                 x += amount
-            elif fourbit in (0x4e, 0x5e, 0x0b):
+            elif fourbit == 0x0b:
+                amount = _get_4ornext(opcode)
+                #print 'Ignoring 0x0b opcode for %d pixels' % amount
+                x += amount
+            elif fourbit in (0x4e, 0x5e):
                 raise NotImplementedError('The 0x%x opcode is not yet implemented.' % fourbit)
             elif twobit == 0:
                 # draw

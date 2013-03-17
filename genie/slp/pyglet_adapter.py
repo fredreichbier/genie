@@ -29,7 +29,7 @@ class MirroredPygletAdapter(PygletAdapter):
         # mirror dat. ehehehehehAHAHAHAHAH
         return y * self.stride + (self.width - x) * self.pixel_size
 
-def load_animation(stream, slp_file, frame_ids, duration=0.1, mirrored=False, player=1):
+def load_animation(slp_file, frame_ids, duration=0.1, mirrored=False, player=1):
     """
         Load some frames from the slp fil into an `pyglet.image.Animation` instance.
         *frame_ids* is a tuple ``(first frame, last frame)`` (inclusive).
@@ -43,7 +43,7 @@ def load_animation(stream, slp_file, frame_ids, duration=0.1, mirrored=False, pl
     anim_frames = []
     for frame_id in xrange(frame_ids[0], frame_ids[1] + 1):
         frame = slp_file.frames[frame_id]
-        img = frame.parse_stream(stream, image_adapter_cls=adapter, player=player)
+        img = frame.parse_stream(image_adapter_cls=adapter, player=player)
         anim_frames.append(AnimationFrame(img, duration))
     return Animation(anim_frames)
 
@@ -64,7 +64,7 @@ DIRECTIONS_IN_SLP = 5
 class AnimationError(Exception):
     pass
 
-def load_aoe_animations(stream, slp_file, duration=0.1, player=1):
+def load_aoe_animations(slp_file, duration=0.1, player=1):
     """
         Load AOE animations. Return a dictionary ``{ direction: Animation instance }``
         where *direction* is a number from 0-9. Look at your numpad.
@@ -78,7 +78,7 @@ def load_aoe_animations(stream, slp_file, duration=0.1, player=1):
     anims = {}
 
     def _load_anim(idx, direction, mirrored=False):
-        anims[direction] = load_animation(stream, slp_file,
+        anims[direction] = load_animation(slp_file,
                                             (idx * frames_per_direction,
                                              (idx + 1) * frames_per_direction - 1),
                                             duration,
