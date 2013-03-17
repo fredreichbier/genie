@@ -166,6 +166,8 @@ class Frame(object):
                 # from reading the correct number of bytes from the
                 # stream to parse the image data correctly.
                 extended = opcode >> 4
+                if extended not in (4,6,5,7):
+                    print 'Extended command!', extended
                 if extended == 0:
                     # woho! this should only be drawn if the
                     # sprite is not x-flipped. TODO.
@@ -180,10 +182,12 @@ class Frame(object):
                     pass
                 elif extended in (4, 6):
                     # special color 1/2, but only 1 byte.
+                    x += 1
                     pass
                 elif extended in (5, 7):
                     # special color 1/2, read amount from stream.
                     amount = _get_byte()
+                    x += amount
                 else:
                     raise NotImplementedError('Unknown extended opcode: %r' % extended)
             elif fourbit == 0x07:
