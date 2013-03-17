@@ -38,7 +38,7 @@ class Environment(object):
         drs = self.get_drs(INTERFAC_DRS)
         return read_palette(StringIO(drs.get_data(PALETTE_OFFSET + idx)))
 
-    def get_slp(self, drs_filename, res_id, image_adapter_cls):
+    def get_slp(self, drs_filename, res_id, image_adapter_cls, palette_id=0):
         """
             Get a `SLPFile` object. Retrieve the correct palette.
 
@@ -46,5 +46,5 @@ class Environment(object):
         """
         drs = self.get_drs(drs_filename)
         return SLPFile(StringIO(drs.get_data(res_id)),
-                       self.get_palette(0),
+                       self.get_palette(palette_id),
                        image_adapter_cls)
