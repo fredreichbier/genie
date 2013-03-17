@@ -1,5 +1,6 @@
 import sys
 import argparse
+import shlex
 import traceback
 import cmd
 import os
@@ -325,6 +326,43 @@ class SLPBrowser(cmd.Cmd):
             self.loader.play_filename(name)
         except:
             traceback.print_exc()
+
+    def do_save(self, params):
+        """
+            Save a specific frame of a specific SLP file to a file.
+
+                save RESOURCE FRAME_ID FILENAME
+
+        """
+        try:
+            resource_filename, frame_id, filename = shlex.split(params)
+            frame_id = int(frame_id)
+            resource_id = _get_resource_id(resource_filename)
+            image = self.loader.get_frames(resource_id)[frame_id]
+            image.save(filename)
+            print 'Saved %r.' % filename
+        except:
+            traceback.print_exc()
+
+    def do_saveall(self, params):
+        """
+            Save all frames of the SLP file to a file.
+
+                saveall RESOURCE TEMPLATE
+
+            where TEMPLATE is a string containing `%d`, which will be replaced with the frame index.
+            This is the output filename.
+        """
+        try:
+            resource_filename, filename_template = shlex.split(params)
+            resource_id = _get_resource_id(resource_filename)
+            for idx, image in enumerate(self.loader.get_frames(resource_id)):
+                filename = filename_template % idx
+                image.save(filename)
+                print 'Saved %r.' % filename
+        except:
+            traceback.print_exc()
+            return
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='View SLP files.')
