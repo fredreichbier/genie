@@ -252,7 +252,10 @@ class SLPBrowser(cmd.Cmd):
         self.intro = 'Welcome to browse_slp.py. You can do anything at browse_slp.py.\n'\
                      '\tYou might want to start with `drs` to see which DRS file you are\n'\
                      '\tcurrently browsing. Then, you can type `ls` to see all available\n'\
-                     '\tfiles, and `play ID` to play .WAV files or `show ID` to view SLP files.'
+                     '\tfiles, and `play ID` to play .WAV files or `show ID` to view SLP files.\n'\
+                     '\tTo save resources try `save RESOURCE FRAME_ID FILENAME`\n'\
+                     '\tor `savefirst` to save the first frame of all animations'
+
         self.loader = loader
 
     def do_drs(self, filename):
@@ -324,6 +327,32 @@ class SLPBrowser(cmd.Cmd):
         try:
             print 'Now playing %r ...' % name
             self.loader.play_filename(name)
+        except:
+            traceback.print_exc()
+
+
+    def do_savefirst(self, params):
+        """
+            Save the first image of an animation or the animation, helpful for finding resource ID
+            Goes from range 'low' - 'high' alter as per ls results or to just get some animations.
+
+                save_first 0 10
+        """
+        try:
+            lower_range, upper_range = shlex.split(params)
+            lower_range = int(lower_range)
+            upper_range = int(upper_range)
+
+            for i in range(lower_range, upper_range):
+                 try:
+                    resource_id = _get_resource_id(str(i))
+
+
+                    image = self.loader.get_frames(resource_id)[0]
+                    image.save('id'+str(i)+'.png')
+                    print 'Saved %r.' % ('id'+str(i)+'.png')
+                 except:
+                    print 'This one does not exist %r' % ('id'+str(i)+'.png')
         except:
             traceback.print_exc()
 
