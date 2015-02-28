@@ -24,8 +24,8 @@ DRS and SLP formats and the Age of Empires SLP files:
  * http://www.digitization.org/wiki/index.php/SLP
  * http://artho.com/age/files/drs.html
  * http://aoe.heavengames.com/downsnew/dlfiles/misc/slplist.zip
- * http://www.ferazelhosting.net/~bryce/re.html
- * http://www.ferazelhosting.net/~bryce/slp.rtf
+ * http://www.ferazelhosting.net/~bryce/re.html (dead)
+ * http://www.boekabart.net/aoe2wide/hg/slp.txt (or http://old.zaynar.co.uk/misc2/slp.txt)   
  * http://www.cryer.co.uk/file-types/p/pal.htm
 
 Thank you very much!
