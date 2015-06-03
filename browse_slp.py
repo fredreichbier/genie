@@ -336,7 +336,7 @@ class SLPBrowser(cmd.Cmd):
             Save the first image of an animation or the animation, helpful for finding resource ID
             Goes from range 'low' - 'high' alter as per ls results or to just get some animations.
 
-                save_first 0 10
+                savefirst 0 10
         """
         try:
             lower_range, upper_range = shlex.split(params)
