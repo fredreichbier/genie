@@ -242,6 +242,7 @@ HELP_SHOW = """Now showing %r. Keys:
 \tq\treturn to prompt
 \t+/-\tzoom
 \ta\tshow the frame hotspot
+\tarrow keys\tto cycle between frames
 """
 HELP_SHOW_ANIM = HELP_SHOW + """
 \t7 8 9
