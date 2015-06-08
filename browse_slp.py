@@ -73,6 +73,9 @@ class SLPLoader(object):
         slp_file = self.env.get_slp(self.drs_filename, resource_id, PygletAdapter, self.palette)
         return [frame.parse_stream(player=self.player) for frame in slp_file.frames]
 
+    def get_raw(self, resource_id):
+        return self.drs_file.get_data(resource_id)
+
     def show_resource(self, resource_id):
         """
             Show the given SLP file.
@@ -270,6 +273,20 @@ class SLPBrowser(cmd.Cmd):
                 print 'No DRS file set yet.'
             else:
                 print "We're current browsing %s" % self.loader.drs_filename
+
+    def do_export(self, params):
+        """
+            Export the given resource to 'filename' without interpreting it.
+
+                export 50155 something.dat
+        """
+        try:
+            name, filename = shlex.split(params)
+            raw = self.loader.get_raw(int(name))
+            with open(filename, 'w') as f:
+                f.write(raw)
+        except:
+            traceback.print_exc()
 
     def do_ls(self, pattern):
         """
