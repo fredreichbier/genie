@@ -162,7 +162,11 @@ class Frame(object):
                         y += 1
                         x = left_boundaries[y]
                     if stream.tell() != command_offsets[y]:
-                        raise Exception('%d but should be %d' % (stream.tell(), command_offsets[y]))
+                        # not an error, but excessive padding might suggest something is slightly wrong!
+                        print "Warning: line %d has %d bytes of air after commands" % (y - 1,
+                                command_offsets[y] - stream.tell())
+                        # get ourselves aligned again
+                        stream.seek(command_offsets[y])
             elif fourbit == 0x06:
                 # player colors
                 amount = _get_4ornext(opcode)
