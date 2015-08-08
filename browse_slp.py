@@ -17,6 +17,9 @@ from genie.slp.pyglet_adapter import PygletAdapter, load_aoe_animations
 BAR_HEIGHT = 12
 
 def _get_resource_id(filename):
+    if not filename:
+        return -1
+
     return int(filename.split('.')[0])
 
 class SLPLoader(object):
@@ -302,11 +305,20 @@ class SLPBrowser(cmd.Cmd):
         """
             Show the given SLP file!
         """
+        success = False
         try:
-            print HELP_SHOW % name
             self.loader.show_filename(name)
+            success = True
+        except KeyError:
+            if not name:
+                print "No filename given."
+            else:
+                print "File %s does not exist." % name
         except:
             traceback.print_exc()
+
+        if success:
+            print HELP_SHOW % name
 
     def do_showanim(self, name):
         """
