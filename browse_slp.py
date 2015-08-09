@@ -262,6 +262,12 @@ class SLPBrowser(cmd.Cmd):
 
         self.loader = loader
 
+    def do_q(self, params):
+        sys.exit(0)
+
+    def do_quit(self, params):
+        self.do_q(params)
+
     def do_drs(self, filename):
         """
             Load a specified DRS file.
@@ -445,4 +451,7 @@ if __name__ == '__main__':
         for command in args.commands:
             browser.onecmd(command)
     if not args.batch_mode:
-        browser.cmdloop()
+        try:
+            browser.cmdloop()
+        except KeyboardInterrupt:
+            sys.exit(0)
