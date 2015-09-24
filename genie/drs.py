@@ -51,7 +51,7 @@ AOE_HEADER = cons.Struct('header',
     cons.Array(lambda ctx: ctx['number_of_tables'], TableAdapter(TABLE)),
 )
 
-SWGB_HEADER = cons.Struct(
+SWGB_HEADER = cons.Struct('header',
     cons.String('copyright', 60, padchar='\0'),
     cons.String('version', 4),
     cons.String('file_type', 12, padchar='\0'),
@@ -116,7 +116,7 @@ class DRSFile(object):
     def __init__(self, stream):
         self.stream = stream
         pos = stream.tell()
-        stream.seek(64)
+        stream.seek(64, 1)
         maybe_swgb_header = stream.read(4)
         stream.seek(pos)
 
