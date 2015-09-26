@@ -319,10 +319,9 @@ class SLPBrowser(cmd.Cmd):
         """
             Show the given SLP file!
         """
-        success = False
+        print HELP_SHOW % name
         try:
             self.loader.show_filename(name)
-            success = True
         except KeyError:
             if not name:
                 print "No filename given."
@@ -330,9 +329,6 @@ class SLPBrowser(cmd.Cmd):
                 print "File %s does not exist." % name
         except:
             traceback.print_exc()
-
-        if success:
-            print HELP_SHOW % name
 
     def do_showanim(self, name):
         """
