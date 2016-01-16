@@ -16,10 +16,11 @@ class Environment(object):
     """
         A manager for a data directory.
     """
-    def __init__(self, path):
+    def __init__(self, path, interfac_drs=INTERFAC_DRS):
         self.path = path
         self.cabinet = Cabinet()
         self._drs_files = {}
+        self.interfac_drs = interfac_drs
 
     def get_drs(self, basename):
         """
@@ -35,7 +36,7 @@ class Environment(object):
         """
             Return the palette dictionary with the index *idx*.
         """
-        drs = self.get_drs(INTERFAC_DRS)
+        drs = self.get_drs(self.interfac_drs)
         return read_palette(StringIO(drs.get_data(PALETTE_OFFSET + idx)))
 
     def get_slp(self, drs_filename, res_id, image_adapter_cls, palette_id=0):

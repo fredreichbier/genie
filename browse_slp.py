@@ -11,7 +11,7 @@ from StringIO import StringIO
 import pyglet
 
 from genie import slp, drs
-from genie.environment import Environment
+from genie.environment import Environment, INTERFAC_DRS
 from genie.slp.pyglet_adapter import PygletAdapter, load_aoe_animations
 
 BAR_HEIGHT = 12
@@ -23,8 +23,8 @@ def _get_resource_id(filename):
     return int(filename.split('.')[0])
 
 class SLPLoader(object):
-    def __init__(self, path, audio_player):
-        self.env = Environment(path)
+    def __init__(self, path, audio_player, interfac_drs=INTERFAC_DRS):
+        self.env = Environment(path, interfac_drs=interfac_drs)
         self._drs_filename = None
         self.audio_player = audio_player
         self.palette = 0
@@ -448,9 +448,12 @@ if __name__ == '__main__':
     parser.add_argument('--batch', dest='batch_mode', default=False,
                         action='store_true',
                         help='If this is set, the command loop is not entered.')
+    parser.add_argument('-i', metavar='INTERFAC', type=str, dest='interfac_drs',
+                        default=INTERFAC_DRS,
+                        help='Filename of the DRS file containing the color palettes. Defaults to interfac.drs')
 
     args = parser.parse_args()
-    loader = SLPLoader(args.path, args.player_command)
+    loader = SLPLoader(args.path, args.player_command, args.interfac_drs)
     # autoload drs
     if args.drs_filename:
         loader.drs_filename = args.drs_filename
