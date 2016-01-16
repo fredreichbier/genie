@@ -140,20 +140,28 @@ class BaseSLPView(object):
     def draw_hotspot(self):
         raise NotImplementedError()
 
-    def zoom(self, factor):
-        self.sprite.scale += factor * 0.2
+    def zoom_with_factor(self, factor, factor_multiplier=0.2):
+        factor *= factor_multiplier
+        self.zoom_to(self.sprite.scale + factor)
+
+    def zoom_to(self, scale):
+        scale = abs(scale)
+        self.sprite.scale = scale
         self.resize_window()
 
     def on_key_press(self, symbol, modifiers):
-        if symbol == pyglet.window.key.Q:
+        key = pyglet.window.key
+        if symbol == key.Q:
             self.window.close()
             pyglet.app.exit()
-        if symbol == pyglet.window.key.A:
+        if symbol == key.A:
             self.show_hotspot = not self.show_hotspot
-        if symbol == pyglet.window.key.PLUS:
-            self.zoom(1)
-        if symbol == pyglet.window.key.MINUS:
-            self.zoom(-1)
+        if symbol == key.PLUS:
+            self.zoom_with_factor(1)
+        if symbol == key.MINUS:
+            self.zoom_with_factor(-1)
+        if symbol == key._0:
+            self.zoom_to(1)
 
 class SLPView(BaseSLPView):
     """
@@ -243,7 +251,7 @@ class AnimatedSLPView(BaseSLPView):
 
 HELP_SHOW = """Now showing %r. Keys:
 \tq\treturn to prompt
-\t+/-\tzoom
+\t+/-/0\tzoom
 \ta\tshow the frame hotspot
 \tarrow keys\tto cycle between frames
 """
@@ -311,10 +319,9 @@ class SLPBrowser(cmd.Cmd):
         """
             Show the given SLP file!
         """
-        success = False
+        print HELP_SHOW % name
         try:
             self.loader.show_filename(name)
-            success = True
         except KeyError:
             if not name:
                 print "No filename given."
@@ -322,9 +329,6 @@ class SLPBrowser(cmd.Cmd):
                 print "File %s does not exist." % name
         except:
             traceback.print_exc()
-
-        if success:
-            print HELP_SHOW % name
 
     def do_showanim(self, name):
         """
